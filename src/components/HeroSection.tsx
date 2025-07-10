@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Search, MapPin, Clock, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import AnimatedCityText from './AnimatedCityText';
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +18,7 @@ const HeroSection = () => {
             <span className="text-green-200">Reserve. Collect.</span>
           </h1>
           <p className="text-xl md:text-2xl text-green-100 mb-8 max-w-3xl mx-auto">
-            Check real-time pharmacy stock across Kinshasa. No more wasted trips or uncertainty. 
+            Check real-time pharmacy stock across <AnimatedCityText />. No more wasted trips or uncertainty. 
             Your health, simplified.
           </p>
         </div>
@@ -51,7 +52,7 @@ const HeroSection = () => {
               <Clock className="w-8 h-8" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Real-Time Stock</h3>
-            <p className="text-green-100">Live inventory updates from verified pharmacies</p>
+            <p className="text-green-100">Live inventory updates from 680+ verified pharmacies</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">

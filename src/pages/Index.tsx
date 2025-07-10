@@ -6,14 +6,22 @@ import MedicineSearch from '@/components/MedicineSearch';
 import AIAssistant from '@/components/AIAssistant';
 import MedicineReportForm from '@/components/MedicineReportForm';
 import TrustIndicators from '@/components/TrustIndicators';
+import LanguageSelector from '@/components/LanguageSelector';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Search, Bot, AlertTriangle } from 'lucide-react';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<'search' | 'ai' | 'report'>('search');
+  const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fr'>('en');
+
+  const handleLanguageSelect = (language: 'en' | 'fr') => {
+    setCurrentLanguage(language);
+    console.log(`Language selected: ${language}`);
+  };
 
   return (
     <div className="min-h-screen bg-white">
+      <LanguageSelector onLanguageSelect={handleLanguageSelect} />
       <Header />
       <HeroSection />
       
