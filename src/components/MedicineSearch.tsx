@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Search, Filter, MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, Filter, MapPin, Clock, CheckCircle, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 interface Medicine {
   id: string;
@@ -27,6 +28,7 @@ interface Medicine {
 const MedicineSearch = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAI, setShowAI] = useState(false);
+  const { toast } = useToast();
 
   // Mock data
   const medicines: Medicine[] = [
@@ -81,6 +83,17 @@ const MedicineSearch = () => {
     }
   };
 
+  const handleQuickReport = (medicineName: string, pharmacyName?: string) => {
+    // In a real app, this would open a pre-filled report form or modal
+    toast({
+      title: "Report Quality Issue",
+      description: `Starting quality report for ${medicineName}${pharmacyName ? ` from ${pharmacyName}` : ''}. You'll be redirected to the full report form.`,
+    });
+    
+    // For now, just log the action
+    console.log('Quick report initiated for:', { medicineName, pharmacyName });
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Search Header */}
@@ -107,6 +120,22 @@ const MedicineSearch = () => {
             🤖 AI Assistant
           </Button>
         </div>
+
+        {/* Quality Alert Banner */}
+        <Card className="mb-6 border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-orange-800 text-sm">
+                  <strong>Medicine Safety Notice:</strong> If you notice anything unusual about a medicine 
+                  (packaging, color, effectiveness), please report it using the "Report Quality Issue" button. 
+                  Help protect your community from substandard medicines.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* AI Assistant Toggle */}
         {showAI && (
@@ -160,6 +189,19 @@ const MedicineSearch = () => {
                   </Badge>
                 </div>
               </div>
+              
+              {/* Quality Report Button */}
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleQuickReport(medicine.name)}
+                  className="text-orange-600 border-orange-300 hover:bg-orange-50 flex items-center gap-2"
+                >
+                  <AlertTriangle className="w-3 h-3" />
+                  Report Quality Issue
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {medicine.inStock ? (
@@ -182,9 +224,19 @@ const MedicineSearch = () => {
                             </div>
                           </div>
                         </div>
-                        <Button className="bg-green-500 hover:bg-green-600">
-                          Reserve Now
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleQuickReport(medicine.name, pharmacy.name)}
+                            className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                          </Button>
+                          <Button className="bg-green-500 hover:bg-green-600">
+                            Reserve Now
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>

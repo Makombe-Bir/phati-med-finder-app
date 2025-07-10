@@ -4,12 +4,13 @@ import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import MedicineSearch from '@/components/MedicineSearch';
 import AIAssistant from '@/components/AIAssistant';
+import MedicineReportForm from '@/components/MedicineReportForm';
 import TrustIndicators from '@/components/TrustIndicators';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Search, Bot } from 'lucide-react';
+import { MessageCircle, Search, Bot, AlertTriangle } from 'lucide-react';
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState<'search' | 'ai'>('search');
+  const [activeSection, setActiveSection] = useState<'search' | 'ai' | 'report'>('search');
 
   return (
     <div className="min-h-screen bg-white">
@@ -19,11 +20,11 @@ const Index = () => {
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200 bg-white sticky top-16 z-40">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-8">
+          <div className="flex space-x-8 overflow-x-auto">
             <Button
               variant={activeSection === 'search' ? 'default' : 'ghost'}
               onClick={() => setActiveSection('search')}
-              className={`flex items-center gap-2 py-4 border-b-2 rounded-none ${
+              className={`flex items-center gap-2 py-4 border-b-2 rounded-none flex-shrink-0 ${
                 activeSection === 'search' 
                   ? 'border-green-500 bg-green-500 hover:bg-green-600' 
                   : 'border-transparent hover:border-gray-300'
@@ -35,7 +36,7 @@ const Index = () => {
             <Button
               variant={activeSection === 'ai' ? 'default' : 'ghost'}
               onClick={() => setActiveSection('ai')}
-              className={`flex items-center gap-2 py-4 border-b-2 rounded-none ${
+              className={`flex items-center gap-2 py-4 border-b-2 rounded-none flex-shrink-0 ${
                 activeSection === 'ai' 
                   ? 'border-green-500 bg-green-500 hover:bg-green-600' 
                   : 'border-transparent hover:border-gray-300'
@@ -43,6 +44,18 @@ const Index = () => {
             >
               <Bot className="w-4 h-4" />
               AI Assistant
+            </Button>
+            <Button
+              variant={activeSection === 'report' ? 'default' : 'ghost'}
+              onClick={() => setActiveSection('report')}
+              className={`flex items-center gap-2 py-4 border-b-2 rounded-none flex-shrink-0 ${
+                activeSection === 'report' 
+                  ? 'border-green-500 bg-green-500 hover:bg-green-600' 
+                  : 'border-transparent hover:border-gray-300'
+              }`}
+            >
+              <AlertTriangle className="w-4 h-4" />
+              Report Quality Issues
             </Button>
           </div>
         </div>
@@ -62,6 +75,7 @@ const Index = () => {
             <AIAssistant />
           </div>
         )}
+        {activeSection === 'report' && <MedicineReportForm />}
       </div>
 
       <TrustIndicators />
@@ -77,6 +91,7 @@ const Index = () => {
             <Button 
               size="lg" 
               className="bg-white text-green-600 hover:bg-gray-100 px-8 py-3 text-lg"
+              onClick={() => setActiveSection('search')}
             >
               Start Searching Now
             </Button>
@@ -84,6 +99,7 @@ const Index = () => {
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-green-600 px-8 py-3 text-lg"
+              onClick={() => setActiveSection('ai')}
             >
               <MessageCircle className="w-5 h-5 mr-2" />
               Talk to AI Assistant
