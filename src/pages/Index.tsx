@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import MedicineSearch from '@/components/MedicineSearch';
@@ -13,17 +13,32 @@ import { MessageCircle, Search, Bot, AlertTriangle } from 'lucide-react';
 const Index = () => {
   const [activeSection, setActiveSection] = useState<'search' | 'ai' | 'report'>('search');
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fr'>('en');
+  const [heroSearchQuery, setHeroSearchQuery] = useState('');
+  const medicineSearchRef = useRef<{ performSearch: (query: string) => void }>(null);
 
   const handleLanguageSelect = (language: 'en' | 'fr') => {
     setCurrentLanguage(language);
     console.log(`Language selected: ${language}`);
   };
 
+  const handleHeroSearch = (query: string) => {
+    setHeroSearchQuery(query);
+    setActiveSection('search');
+    
+    // Scroll to search section and trigger search
+    setTimeout(() => {
+      const searchSection = document.getElementById('search-section');
+      if (searchSection) {
+        searchSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <LanguageSelector onLanguageSelect={handleLanguageSelect} />
       <Header />
-      <HeroSection />
+      <HeroSection onSearch={handleHeroSearch} />
       
       {/* Navigation Tabs */}
       <div className="border-b border-gray-200 bg-white sticky top-16 z-40">
@@ -70,8 +85,8 @@ const Index = () => {
       </div>
 
       {/* Content Sections */}
-      <div className="py-8">
-        {activeSection === 'search' && <MedicineSearch />}
+      <div className="py-8" id="search-section">
+        {activeSection === 'search' && <MedicineSearch key={heroSearchQuery} initialQuery={heroSearchQuery} />}
         {activeSection === 'ai' && (
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-8">

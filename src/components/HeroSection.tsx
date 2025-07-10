@@ -5,8 +5,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AnimatedCityText from './AnimatedCityText';
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  onSearch?: (query: string) => void;
+}
+
+const HeroSection = ({ onSearch }: HeroSectionProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = () => {
+    if (searchQuery.trim() && onSearch) {
+      onSearch(searchQuery.trim());
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   return (
     <div className="bg-gradient-to-br from-green-500 to-green-600 text-white">
@@ -32,9 +48,11 @@ const HeroSection = () => {
               placeholder="Search for medicine... (e.g., 'Paracetamol for headache')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
               className="pl-12 pr-4 py-4 text-lg bg-white text-gray-900 rounded-full border-0 shadow-lg focus:ring-2 focus:ring-green-300"
             />
             <Button 
+              onClick={handleSearch}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-green-600 hover:bg-green-700 rounded-full px-6"
             >
               Search

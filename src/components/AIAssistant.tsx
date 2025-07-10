@@ -1,23 +1,19 @@
 
-import React, { useState } from 'react';
-import { Send, Bot, User, Lightbulb, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Send, Bot, User, Loader2, WifiOff, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import { getAIResponse, onlineStatusListener } from '@/services/dataService';
 
 interface Message {
   id: string;
   type: 'user' | 'ai';
   content: string;
   timestamp: Date;
-  suggestions?: string[];
-  medicines?: Array<{
-    name: string;
-    reason: string;
-    pharmacy: string;
-    distance: string;
-  }>;
+  medicines?: any[];
 }
 
 const AIAssistant = () => {
@@ -25,165 +21,239 @@ const AIAssistant = () => {
     {
       id: '1',
       type: 'ai',
-      content: "Hello! I'm your Phati AI assistant. I can help you find the right medicine for your symptoms or condition. What's bothering you today?",
+      content: 'Hello! I\'m your AI medicine assistant. I can help you find the right medicines for your symptoms or conditions. Try asking me something like "I have a headache" or "What can I take for fever?"',
       timestamp: new Date(),
-      suggestions: [
-        "I have a headache",
-        "Looking for pain relief",
-        "Need antibiotics",
-        "Child fever medicine"
-      ]
     }
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const { toast } = useToast();
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const quickQuestions = [
+    "I have a headache",
+    "What helps with fever?",
+    "I need antibiotics for infection",
+    "Medicine for diabetes",
+    "Pain relief for children"
+  ];
+
+  // Monitor online status
+  useEffect(() => {
+    const cleanup = onlineStatusListener(setIsOnline);
+    return cleanup;
+  }, []);
+
+  const handleSendMessage = async (message: string = inputValue) => {
+    if (!message.trim()) return;
+    
+    if (!isOnline) {
+      toast({
+        title: "You're offline",
+        description: "AI Assistant requires an internet connection.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputMessage,
-      timestamp: new Date()
-    };
-
-    // Simulate AI response
-    const aiResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      type: 'ai',
-      content: "Based on your symptoms, here are some medicine options I found nearby:",
+      content: message.trim(),
       timestamp: new Date(),
-      medicines: [
-        {
-          name: "Paracetamol 500mg",
-          reason: "Effective for headache and general pain relief",
-          pharmacy: "Pharmacie Centrale",
-          distance: "0.8 km away"
-        },
-        {
-          name: "Ibuprofen 400mg",
-          reason: "Anti-inflammatory, good for pain and swelling",
-          pharmacy: "Pharmacie Sainte-Anne",
-          distance: "1.2 km away"
-        }
-      ],
-      suggestions: [
-        "How much should I take?",
-        "Any side effects?",
-        "Can I take both together?",
-        "Reserve the Paracetamol"
-      ]
     };
 
-    setMessages(prev => [...prev, userMessage, aiResponse]);
-    setInputMessage('');
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsLoading(true);
+
+    try {
+      const aiResponse = await getAIResponse(message);
+      
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: aiResponse.response,
+        timestamp: new Date(),
+        medicines: aiResponse.recommendedMedicines
+      };
+
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        type: 'ai',
+        content: 'I apologize, but I\'m having trouble connecting right now. Please check your internet connection and try again.',
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      
+      toast({
+        title: "Connection error",
+        description: error instanceof Error ? error.message : "Failed to get AI response.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setInputMessage(suggestion);
+  const handleQuickQuestion = (question: string) => {
+    handleSendMessage(question);
   };
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Card className="h-[600px] flex flex-col">
-        <div className="p-4 border-b bg-green-50">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-              <Bot className="w-6 h-6 text-white" />
+      {!isOnline && (
+        <Card className="mb-6 border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <WifiOff className="w-5 h-5 text-red-600" />
+              <p className="text-red-800">
+                <strong>You're offline.</strong> AI Assistant requires an internet connection.
+              </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Phati AI Assistant</h3>
-              <p className="text-sm text-gray-600">Your personal medicine advisor</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quick Questions */}
+      <Card className="mb-6 border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Lightbulb className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-blue-800 mb-3 font-medium">Try asking me about:</p>
+              <div className="flex flex-wrap gap-2">
+                {quickQuestions.map((question) => (
+                  <Badge 
+                    key={question}
+                    variant="secondary" 
+                    className="cursor-pointer hover:bg-blue-200 transition-colors"
+                    onClick={() => handleQuickQuestion(question)}
+                  >
+                    "{question}"
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}>
-              {message.type === 'ai' && (
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
-              )}
-              
-              <div className={`max-w-2xl ${message.type === 'user' ? 'order-1' : ''}`}>
-                <div className={`p-3 rounded-lg ${
-                  message.type === 'user' 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-gray-100 text-gray-900'
-                }`}>
-                  <p>{message.content}</p>
-                </div>
-
-                {/* Medicine suggestions */}
-                {message.medicines && (
-                  <div className="mt-3 space-y-2">
-                    {message.medicines.map((medicine, index) => (
-                      <div key={index} className="p-3 bg-white border border-gray-200 rounded-lg">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-medium text-gray-900">{medicine.name}</p>
-                            <p className="text-sm text-gray-600 mt-1">{medicine.reason}</p>
-                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                              <MapPin className="w-3 h-3" />
-                              <span>{medicine.pharmacy} • {medicine.distance}</span>
-                            </div>
-                          </div>
-                          <Button size="sm" className="bg-green-500 hover:bg-green-600">
-                            Reserve
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+      {/* Messages */}
+      <Card className="mb-6 h-96 overflow-hidden">
+        <CardContent className="p-0 h-full">
+          <div className="h-full overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {message.type === 'ai' && (
+                  <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
+                
+                <div className={`max-w-[80%] ${message.type === 'user' ? 'order-first' : ''}`}>
+                  <div
+                    className={`p-3 rounded-lg ${
+                      message.type === 'user'
+                        ? 'bg-green-500 text-white ml-auto'
+                        : 'bg-gray-100 text-gray-900'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                  </div>
+                  
+                  {/* Recommended Medicines */}
+                  {message.medicines && message.medicines.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Recommended medicines:</p>
+                      {message.medicines.map((medicine) => (
+                        <Card key={medicine.id} className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium">{medicine.name}</p>
+                              <p className="text-sm text-gray-600">{medicine.strength} • {medicine.form}</p>
+                              <p className="text-sm text-gray-500">{medicine.description}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-green-600">{medicine.price}</p>
+                              <Badge className={medicine.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                                {medicine.inStock ? 'Available' : 'Out of Stock'}
+                              </Badge>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <p className="text-xs text-gray-500 mt-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
 
-                {/* Quick suggestions */}
-                {message.suggestions && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {message.suggestions.map((suggestion, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="cursor-pointer hover:bg-green-50 hover:border-green-300"
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion}
-                      </Badge>
-                    ))}
+                {message.type === 'user' && (
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-white" />
                   </div>
                 )}
               </div>
-
-              {message.type === 'user' && (
-                <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-white" />
+            ))}
+            
+            {isLoading && (
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+                <div className="bg-gray-100 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm text-gray-600">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-        <div className="p-4 border-t">
-          <div className="flex gap-2">
-            <Input
-              type="text"
-              placeholder="Describe your symptoms or ask about medicine..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              className="flex-1"
-            />
-            <Button onClick={handleSendMessage} className="bg-green-500 hover:bg-green-600">
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-            <Lightbulb className="w-3 h-3" />
-            <span>Try: "I have fever and body aches" or "Safe pain relief for pregnancy"</span>
-          </div>
-        </div>
+      {/* Input */}
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Ask me about medicines, symptoms, or health conditions..."
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
+          disabled={isLoading || !isOnline}
+          className="flex-1"
+        />
+        <Button 
+          onClick={() => handleSendMessage()}
+          disabled={isLoading || !inputValue.trim() || !isOnline}
+          className="bg-green-500 hover:bg-green-600"
+        >
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Send className="w-4 h-4" />
+          )}
+        </Button>
+      </div>
+
+      {/* Disclaimer */}
+      <Card className="mt-4 border-yellow-200 bg-yellow-50">
+        <CardContent className="p-4">
+          <p className="text-yellow-800 text-sm">
+            <strong>Medical Disclaimer:</strong> This AI assistant provides general information only and should not replace professional medical advice. 
+            Always consult with a qualified healthcare provider for medical diagnosis and treatment.
+          </p>
+        </CardContent>
       </Card>
     </div>
   );
