@@ -7,7 +7,7 @@ const TrustIndicators = () => {
   const stats = [
     { icon: Users, label: 'Active Patients', value: '400,000+', color: 'text-blue-600' },
     { icon: MapPin, label: 'Partner Pharmacies', value: '600+', color: 'text-green-600' },
-    { icon: Clock, label: 'Avg. Reservation Time', value: '2 mins', color: 'text-purple-600' },
+    { icon: Clock, label: 'Avg. Pickup Time', value: '2 mins', color: 'text-purple-600' },
     { icon: Star, label: 'User Satisfaction', value: '4.8/5', color: 'text-yellow-600' }
   ];
 
