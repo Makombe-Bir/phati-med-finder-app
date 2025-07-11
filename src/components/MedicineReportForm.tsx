@@ -56,6 +56,35 @@ const MedicineReportForm = () => {
     return cleanup;
   }, []);
 
+  // Check for pre-filled data from redirection
+  useEffect(() => {
+    const pendingReport = sessionStorage.getItem('pendingQualityReport');
+    if (pendingReport) {
+      try {
+        const reportData = JSON.parse(pendingReport);
+        setFormData(prev => ({
+          ...prev,
+          medicineName: reportData.medicineName || '',
+          pharmacyName: reportData.pharmacyName || ''
+        }));
+        
+        // Clear the stored data after using it
+        sessionStorage.removeItem('pendingQualityReport');
+        
+        // Show a toast to inform the user about pre-filled data
+        if (reportData.medicineName) {
+          toast({
+            title: "Form Pre-filled",
+            description: `Medicine name "${reportData.medicineName}"${reportData.pharmacyName ? ` from "${reportData.pharmacyName}"` : ''} has been pre-filled based on your selection.`,
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing pending quality report data:', error);
+        sessionStorage.removeItem('pendingQualityReport');
+      }
+    }
+  }, [toast]);
+
   const handleInputChange = (field: keyof ReportFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
