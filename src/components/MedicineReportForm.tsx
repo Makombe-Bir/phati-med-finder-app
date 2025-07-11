@@ -6,8 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { submitQualityReport, getUserReports, onlineStatusListener } from '@/services/dataService';
+import { submitQualityReport, getUserReports, onlineStatusListener, MEDICINE_NAMES, PHARMACY_NAMES } from '@/services/dataService';
 
 interface ReportFormData {
   medicineName: string;
@@ -24,10 +25,14 @@ const MedicineReportForm = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userReports, setUserReports] = useState<any[]>([]);
+  const [medicineSearchResults, setMedicineSearchResults] = useState<string[]>([]);
+  const [pharmacySearchResults, setPharmacySearchResults] = useState<string[]>([]);
+  const [showMedicineResults, setShowMedicineResults] = useState(false);
+  const [showPharmacyResults, setShowPharmacyResults] = useState(false);
   const [formData, setFormData] = useState<ReportFormData>({
     medicineName: '',
     pharmacyName: '',
-    location: '',
+    location: 'Goma', // Default to Goma
     issueType: '',
     description: '',
     anonymous: false,
@@ -53,6 +58,44 @@ const MedicineReportForm = () => {
 
   const handleInputChange = (field: keyof ReportFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleMedicineSearch = (value: string) => {
+    setFormData(prev => ({ ...prev, medicineName: value }));
+    
+    if (value.length > 0) {
+      const filtered = MEDICINE_NAMES.filter(name => 
+        name.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 5);
+      setMedicineSearchResults(filtered);
+      setShowMedicineResults(true);
+    } else {
+      setShowMedicineResults(false);
+    }
+  };
+
+  const handlePharmacySearch = (value: string) => {
+    setFormData(prev => ({ ...prev, pharmacyName: value }));
+    
+    if (value.length > 0) {
+      const filtered = PHARMACY_NAMES.filter(name => 
+        name.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 5);
+      setPharmacySearchResults(filtered);
+      setShowPharmacyResults(true);
+    } else {
+      setShowPharmacyResults(false);
+    }
+  };
+
+  const selectMedicine = (medicine: string) => {
+    setFormData(prev => ({ ...prev, medicineName: medicine }));
+    setShowMedicineResults(false);
+  };
+
+  const selectPharmacy = (pharmacy: string) => {
+    setFormData(prev => ({ ...prev, pharmacyName: pharmacy }));
+    setShowPharmacyResults(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,7 +138,7 @@ const MedicineReportForm = () => {
       setFormData({
         medicineName: '',
         pharmacyName: '',
-        location: '',
+        location: 'Goma',
         issueType: '',
         description: '',
         anonymous: false,
@@ -184,7 +227,7 @@ const MedicineReportForm = () => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Medicine Information</h3>
               
-              <div>
+              <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Medicine Name *
                 </label>
@@ -192,14 +235,29 @@ const MedicineReportForm = () => {
                   type="text"
                   placeholder="e.g., Amoxicillin 500mg capsules"
                   value={formData.medicineName}
-                  onChange={(e) => handleInputChange('medicineName', e.target.value)}
+                  onChange={(e) => handleMedicineSearch(e.target.value)}
+                  onBlur={() => setTimeout(() => setShowMedicineResults(false), 200)}
+                  onFocus={() => formData.medicineName && setShowMedicineResults(true)}
                   required
                   disabled={isSubmitting}
                 />
+                {showMedicineResults && medicineSearchResults.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    {medicineSearchResults.map((medicine, index) => (
+                      <div
+                        key={index}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => selectMedicine(medicine)}
+                      >
+                        {medicine}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Pharmacy Name
                   </label>
@@ -207,21 +265,41 @@ const MedicineReportForm = () => {
                     type="text"
                     placeholder="Where did you get this medicine?"
                     value={formData.pharmacyName}
-                    onChange={(e) => handleInputChange('pharmacyName', e.target.value)}
+                    onChange={(e) => handlePharmacySearch(e.target.value)}
+                    onBlur={() => setTimeout(() => setShowPharmacyResults(false), 200)}
+                    onFocus={() => formData.pharmacyName && setShowPharmacyResults(true)}
                     disabled={isSubmitting}
                   />
+                  {showPharmacyResults && pharmacySearchResults.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                      {pharmacySearchResults.map((pharmacy, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => selectPharmacy(pharmacy)}
+                        >
+                          {pharmacy}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Location
                   </label>
-                  <Input
-                    type="text"
-                    placeholder="e.g., Gombe, Kinshasa"
+                  <Select
                     value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    onValueChange={(value) => handleInputChange('location', value)}
                     disabled={isSubmitting}
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Goma">Goma</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -325,7 +403,7 @@ const MedicineReportForm = () => {
                 onClick={() => setFormData({
                   medicineName: '',
                   pharmacyName: '',
-                  location: '',
+                  location: 'Goma',
                   issueType: '',
                   description: '',
                   anonymous: false,

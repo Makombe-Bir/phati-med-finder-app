@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const TrustIndicators = () => {
   const stats = [
-    { icon: Users, label: 'Active Patients', value: '12,500+', color: 'text-blue-600' },
-    { icon: MapPin, label: 'Partner Pharmacies', value: '85+', color: 'text-green-600' },
+    { icon: Users, label: 'Active Patients', value: '400,000+', color: 'text-blue-600' },
+    { icon: MapPin, label: 'Partner Pharmacies', value: '600+', color: 'text-green-600' },
     { icon: Clock, label: 'Avg. Reservation Time', value: '2 mins', color: 'text-purple-600' },
     { icon: Star, label: 'User Satisfaction', value: '4.8/5', color: 'text-yellow-600' }
   ];
@@ -83,7 +83,7 @@ const TrustIndicators = () => {
               </blockquote>
               <div className="text-gray-600">
                 <p className="font-medium">Marie Kabongo</p>
-                <p className="text-sm">Mother of 3, Kinshasa</p>
+                <p className="text-sm">Mother of 3, Goma</p>
               </div>
             </CardContent>
           </Card>

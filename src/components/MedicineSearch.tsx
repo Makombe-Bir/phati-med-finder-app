@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, MapPin, Clock, CheckCircle, AlertCircle, AlertTriangle, Loader2, Wifi, WifiOff } from 'lucide-react';
+import { Search, Filter, MapPin, Clock, CheckCircle, AlertCircle, AlertTriangle, Loader2, Wifi, WifiOff, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -104,7 +105,7 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
       const reservation = await reserveMedicine(medicineId, pharmacyId, 1);
       toast({
         title: "Medicine Reserved!",
-        description: `${medicineName} has been reserved at ${pharmacyName}. Reservation ID: ${reservation.id}. Please collect within 24 hours.`,
+        description: `${medicineName} has been reserved at ${pharmacyName}. Reservation Code: ${reservation.id}. Please collect within 24 hours.`,
       });
     } catch (error) {
       toast({
@@ -123,6 +124,18 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
       description: `Starting quality report for ${medicineName}${pharmacyName ? ` from ${pharmacyName}` : ''}. You'll be redirected to the full report form.`,
     });
     console.log('Quick report initiated for:', { medicineName, pharmacyName });
+  };
+
+  const handleGetDirections = (address: string, pharmacyName: string) => {
+    // Generate Google Maps directions URL
+    const encodedAddress = encodeURIComponent(`${address}, Goma, DRC`);
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    window.open(mapsUrl, '_blank');
+    
+    toast({
+      title: "Opening Directions",
+      description: `Getting directions to ${pharmacyName}`,
+    });
   };
 
   const getStockColor = (level: string) => {
@@ -206,7 +219,7 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-green-500" />
-            <p className="text-gray-600">Searching medicines across 680+ pharmacies...</p>
+            <p className="text-gray-600">Searching medicines across 600+ pharmacies...</p>
           </div>
         </div>
       )}
@@ -290,6 +303,14 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
                               className="text-orange-600 border-orange-300 hover:bg-orange-50"
                             >
                               <AlertTriangle className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleGetDirections(pharmacy.address, pharmacy.name)}
+                              className="text-blue-600 border-blue-300 hover:bg-blue-50"
+                            >
+                              <ExternalLink className="w-3 h-3" />
                             </Button>
                             <Button 
                               className="bg-green-500 hover:bg-green-600"

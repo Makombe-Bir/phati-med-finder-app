@@ -1,5 +1,5 @@
 
-// Simulated data for the platform
+// Simulated data for the platform - Goma only
 const MEDICINES_DATA = [
   {
     id: '1',
@@ -33,7 +33,7 @@ const MEDICINES_DATA = [
     expiryDate: '2025-08-15',
     pharmacies: [
       { id: '1', name: 'Pharmacie Centrale', distance: '0.8 km', rating: 4.8, stockCount: 8, address: 'Avenue de la Paix, Goma', phone: '+243 123 456 789' },
-      { id: '4', name: 'Pharmacie du Marché', distance: '1.5 km', rating: 4.5, stockCount: 15, address: 'Marché Central, Bukavu', phone: '+243 321 654 987' }
+      { id: '4', name: 'Pharmacie du Marché', distance: '1.5 km', rating: 4.5, stockCount: 15, address: 'Marché Central, Goma', phone: '+243 321 654 987' }
     ]
   },
   {
@@ -64,7 +64,7 @@ const MEDICINES_DATA = [
     expiryDate: '2026-03-20',
     pharmacies: [
       { id: '2', name: 'Pharmacie Sainte-Anne', distance: '1.2 km', rating: 4.6, stockCount: 67, address: 'Rue du Marché, Goma', phone: '+243 987 654 321' },
-      { id: '5', name: 'Pharmacie Nouvelle', distance: '3.2 km', rating: 4.4, stockCount: 34, address: 'Quartier Himbi, Bukavu', phone: '+243 789 123 456' }
+      { id: '5', name: 'Pharmacie Nouvelle', distance: '3.2 km', rating: 4.4, stockCount: 34, address: 'Quartier Himbi, Goma', phone: '+243 789 123 456' }
     ]
   },
   {
@@ -84,6 +84,23 @@ const MEDICINES_DATA = [
     ]
   }
 ];
+
+// All pharmacy names for autocomplete
+export const PHARMACY_NAMES = [
+  'Pharmacie Centrale',
+  'Pharmacie Sainte-Anne',
+  'Pharmacie Moderne',
+  'Pharmacie du Marché',
+  'Pharmacie Nouvelle',
+  'Pharmacie des Volcans',
+  'Pharmacie Espoir',
+  'Pharmacie Santé Plus',
+  'Pharmacie Bonne Santé',
+  'Pharmacie Virunga'
+];
+
+// Extract medicine names for autocomplete
+export const MEDICINE_NAMES = MEDICINES_DATA.map(med => med.name);
 
 const AI_RESPONSES = [
   {
@@ -115,6 +132,14 @@ const checkOnlineStatus = () => {
   if (!navigator.onLine) {
     throw new Error('You are currently offline. Please check your internet connection and try again.');
   }
+};
+
+// Generate reservation code in format: A0000
+const generateReservationCode = () => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const letter = letters[Math.floor(Math.random() * letters.length)];
+  const numbers = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${letter}${numbers}`;
 };
 
 // API simulation functions
@@ -170,13 +195,13 @@ export const reserveMedicine = async (medicineId: string, pharmacyId: string, qu
   checkOnlineStatus();
   await delay(1000 + Math.random() * 500);
   
-  // Simulate successful reservation
-  const reservationId = `RES-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  // Generate reservation code
+  const reservationCode = generateReservationCode();
   
   // Store reservation in localStorage
   const reservations = JSON.parse(localStorage.getItem('reservations') || '[]');
   const newReservation = {
-    id: reservationId,
+    id: reservationCode,
     medicineId,
     pharmacyId,
     quantity,

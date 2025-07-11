@@ -6,19 +6,18 @@ import MedicineSearch from '@/components/MedicineSearch';
 import AIAssistant from '@/components/AIAssistant';
 import MedicineReportForm from '@/components/MedicineReportForm';
 import TrustIndicators from '@/components/TrustIndicators';
-import LanguageSelector from '@/components/LanguageSelector';
+import LocationDetector from '@/components/LocationDetector';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Search, Bot, AlertTriangle } from 'lucide-react';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<'search' | 'ai' | 'report'>('search');
-  const [currentLanguage, setCurrentLanguage] = useState<'en' | 'fr'>('en');
   const [heroSearchQuery, setHeroSearchQuery] = useState('');
+  const [locationDetected, setLocationDetected] = useState(false);
   const medicineSearchRef = useRef<{ performSearch: (query: string) => void }>(null);
 
-  const handleLanguageSelect = (language: 'en' | 'fr') => {
-    setCurrentLanguage(language);
-    console.log(`Language selected: ${language}`);
+  const handleLocationDetectionComplete = () => {
+    setLocationDetected(true);
   };
 
   const handleHeroSearch = (query: string) => {
@@ -34,9 +33,12 @@ const Index = () => {
     }, 100);
   };
 
+  if (!locationDetected) {
+    return <LocationDetector onDetectionComplete={handleLocationDetectionComplete} />;
+  }
+
   return (
     <div className="min-h-screen bg-white">
-      <LanguageSelector onLanguageSelect={handleLanguageSelect} />
       <Header />
       <HeroSection onSearch={handleHeroSearch} />
       
@@ -144,7 +146,7 @@ const Index = () => {
             Making healthcare accessible, one pharmacy at a time.
           </p>
           <p className="text-sm text-gray-500">
-            © 2024 Phati Marketplace. Improving healthcare access in the Democratic Republic of Congo.
+            © 2024 Phati Marketplace. Improving healthcare access in Goma, Democratic Republic of Congo.
           </p>
         </div>
       </footer>
