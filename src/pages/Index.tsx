@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Header from '@/components/Header';
 import HeroSection from '@/components/HeroSection';
 import MedicineSearch from '@/components/MedicineSearch';
@@ -14,7 +14,6 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState<'search' | 'ai' | 'report'>('search');
   const [heroSearchQuery, setHeroSearchQuery] = useState('');
   const [locationDetected, setLocationDetected] = useState(false);
-  const medicineSearchRef = useRef<{ performSearch: (query: string) => void }>(null);
 
   const handleLocationDetectionComplete = () => {
     setLocationDetected(true);
@@ -32,6 +31,31 @@ const Index = () => {
       }
     }, 100);
   };
+
+  const handleReportRedirect = (medicineName: string, pharmacyName?: string) => {
+    setActiveSection('report');
+    
+    // Scroll to the report section
+    setTimeout(() => {
+      const searchSection = document.getElementById('search-section');
+      if (searchSection) {
+        searchSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
+  // Listen for custom redirect events
+  useEffect(() => {
+    const handleRedirectEvent = (event: CustomEvent) => {
+      handleReportRedirect(event.detail.medicineName, event.detail.pharmacyName);
+    };
+
+    window.addEventListener('redirectToReport', handleRedirectEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('redirectToReport', handleRedirectEvent as EventListener);
+    };
+  }, []);
 
   if (!locationDetected) {
     return <LocationDetector onDetectionComplete={handleLocationDetectionComplete} />;
@@ -88,7 +112,13 @@ const Index = () => {
 
       {/* Content Sections */}
       <div className="py-8" id="search-section">
-        {activeSection === 'search' && <MedicineSearch key={heroSearchQuery} initialQuery={heroSearchQuery} />}
+        {activeSection === 'search' && (
+          <MedicineSearch 
+            key={heroSearchQuery} 
+            initialQuery={heroSearchQuery}
+            onReportRedirect={handleReportRedirect}
+          />
+        )}
         {activeSection === 'ai' && (
           <div className="max-w-7xl mx-auto px-4">
             <div className="text-center mb-8">
@@ -146,7 +176,7 @@ const Index = () => {
             Making healthcare accessible, one pharmacy at a time.
           </p>
           <p className="text-sm text-gray-500">
-            © 2024 Phati Marketplace. Improving healthcare access in Goma, Democratic Republic of Congo.
+            © 2024 Phati Marketplace, powered by Valorigo. Improving healthcare access in Congo (DRC).
           </p>
         </div>
       </footer>

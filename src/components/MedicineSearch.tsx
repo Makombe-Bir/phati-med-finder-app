@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Clock, CheckCircle, AlertCircle, AlertTriangle, Loader2, Wifi, WifiOff, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { searchMedicines, reserveMedicine, onlineStatusListener } from '@/services/dataService';
+import WhatsAppNotificationDialog from '@/components/WhatsAppNotificationDialog';
 
 interface Medicine {
   id: string;
@@ -33,14 +33,19 @@ interface Medicine {
 
 interface MedicineSearchProps {
   initialQuery?: string;
+  onReportRedirect?: (medicineName: string, pharmacyName?: string) => void;
 }
 
-const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
+const MedicineSearch = ({ initialQuery = '', onReportRedirect }: MedicineSearchProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [reservingMedicine, setReservingMedicine] = useState<string | null>(null);
+  const [notificationDialog, setNotificationDialog] = useState<{
+    isOpen: boolean;
+    medicineName: string;
+  }>({ isOpen: false, medicineName: '' });
   const { toast } = useToast();
 
   // Monitor online status
@@ -119,11 +124,28 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
   };
 
   const handleQuickReport = (medicineName: string, pharmacyName?: string) => {
+    // Store the report data for the report form
+    const reportData = {
+      medicineName,
+      pharmacyName: pharmacyName || '',
+      timestamp: new Date().toISOString()
+    };
+    sessionStorage.setItem('pendingQualityReport', JSON.stringify(reportData));
+    
+    // Call the redirect callback if provided (from parent component)
+    if (onReportRedirect) {
+      onReportRedirect(medicineName, pharmacyName);
+    } else {
+      // Fallback: trigger a custom event that the parent can listen to
+      window.dispatchEvent(new CustomEvent('redirectToReport', { 
+        detail: { medicineName, pharmacyName } 
+      }));
+    }
+    
     toast({
-      title: "Report Quality Issue",
-      description: `Starting quality report for ${medicineName}${pharmacyName ? ` from ${pharmacyName}` : ''}. You'll be redirected to the full report form.`,
+      title: "Redirecting to Quality Report",
+      description: `Opening quality report form for ${medicineName}${pharmacyName ? ` from ${pharmacyName}` : ''}.`,
     });
-    console.log('Quick report initiated for:', { medicineName, pharmacyName });
   };
 
   const handleGetDirections = (address: string, pharmacyName: string) => {
@@ -136,6 +158,10 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
       title: "Opening Directions",
       description: `Getting directions to ${pharmacyName}`,
     });
+  };
+
+  const handleNotifyMe = (medicineName: string) => {
+    setNotificationDialog({ isOpen: true, medicineName });
   };
 
   const getStockColor = (level: string) => {
@@ -338,7 +364,12 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
                       <p className="font-medium text-red-800">Currently out of stock</p>
                       <p className="text-red-600 text-sm">We'll notify you when it becomes available</p>
                     </div>
-                    <Button variant="outline" className="ml-auto" disabled={!isOnline}>
+                    <Button 
+                      variant="outline" 
+                      className="ml-auto" 
+                      disabled={!isOnline}
+                      onClick={() => handleNotifyMe(medicine.name)}
+                    >
                       Notify Me
                     </Button>
                   </div>
@@ -356,6 +387,13 @@ const MedicineSearch = ({ initialQuery = '' }: MedicineSearchProps) => {
           )}
         </div>
       )}
+
+      {/* WhatsApp Notification Dialog */}
+      <WhatsAppNotificationDialog
+        isOpen={notificationDialog.isOpen}
+        onClose={() => setNotificationDialog({ isOpen: false, medicineName: '' })}
+        medicineName={notificationDialog.medicineName}
+      />
     </div>
   );
 };

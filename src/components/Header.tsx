@@ -3,11 +3,24 @@ import React from 'react';
 import { MapPin, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 const Header = () => {
-  const handleGoLive = () => {
-    // This could later redirect to signup/onboarding
-    alert('Go Live feature coming soon! Sign up to access real-time inventory and reservations.');
+  const { toast } = useToast();
+
+  const handleAccessRealService = () => {
+    // Clear the location detection flag to force re-check
+    localStorage.removeItem('locationDetected');
+    
+    toast({
+      title: "Re-checking your eligibility",
+      description: "We're verifying your location to provide you with the best service experience.",
+    });
+
+    // Reload the page after a brief delay to allow toast to show
+    setTimeout(() => {
+      window.location.reload();
+    }, 1500);
   };
 
   return (
@@ -29,19 +42,19 @@ const Header = () => {
             <span className="text-sm">Goma, DRC</span>
           </div>
 
-          {/* Demo Mode & Go Live */}
+          {/* Demo Mode & Access Real Service */}
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="text-xs">
                 Demo Version
               </Badge>
               <Button 
-                onClick={handleGoLive}
+                onClick={handleAccessRealService}
                 size="sm" 
                 className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
-                Go Live
+                Access Real Service
               </Button>
             </div>
           </div>
